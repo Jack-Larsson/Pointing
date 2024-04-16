@@ -1,0 +1,3 @@
+/home/bwidemo/NewJansFRI1/Pointing/CMakeFiles/KinectTest.dir
+/home/bwidemo/NewJansFRI1/Pointing/CMakeFiles/edit_cache.dir
+/home/bwidemo/NewJansFRI1/Pointing/CMakeFiles/rebuild_cache.dir
