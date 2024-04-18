@@ -54,6 +54,12 @@ int main() {
     // Get a reference to the Python function
     PyObject *drawHands = PyObject_GetAttrString(HandTest, "drawHands");
 
+    //make a 2d array to hold coordinates from python call
+    double **pointerFinger = (double **)malloc(4 * sizeof(double *));
+    for (int i = 0; i < 4; i++) {
+        pointerFinger[i] = (double *)malloc(3 * sizeof(double));
+    }
+
     bool lookingForHands = true;
     while(lookingForHands) {
         if (k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE) == K4A_WAIT_RESULT_SUCCEEDED) {
@@ -78,9 +84,26 @@ int main() {
                 PyObject *curFrame = PyTuple_Pack(1, PyBytes_FromStringAndSize((char*)pybuf.buf, pybuf.len));
 
                 // Call drawHands()
-                PyObject_CallObject(drawHands, curFrame);
+                PyObject *fingerCoords = PyObject_CallObject(drawHands, curFrame);
 
-                // Clean up python object
+                //extract c doubles from python tuple
+                
+                // Process the result (a list of coordinates)
+                Py_ssize_t size = PyList_Size(fingerCoords);
+                for (Py_ssize_t i = 0; i < size; ++i) {
+                    PyObject *coords = PyList_GetItem(fingerCoords, i);
+                    if (PyTuple_Check(coords) && PyTuple_Size(coords) == 3) {
+                        //put coordinates in 2d array
+                        pointerFinger[i][0] = PyFloat_AsDouble(PyTuple_GetItem(coords, 0));
+                        pointerFinger[i][1] = PyFloat_AsDouble(PyTuple_GetItem(coords, 1));
+                        pointerFinger[i][2] = PyFloat_AsDouble(PyTuple_GetItem(coords, 2));
+                    }
+                }
+
+                //send the values in pointerFinger somewhere to do some stuff
+
+                // Clean up python objects
+                Py_DECREF(fingerCoords);
                 Py_DECREF(curFrame);
                 k4a_image_release(colorImage);
             }
@@ -93,6 +116,11 @@ int main() {
     // Shutdown the Python interpreter
     Py_Finalize();
 
+    //free pointerFinger
+    for (int i = 0; i < rows; i++) {
+        free(pointerFinger[i]);
+    }
+    free(pointerFinger);
 
     // Shut down the camera when finished with application logic
     k4a_device_stop_cameras(device);
