@@ -7,15 +7,16 @@ mp_hands = mp.solutions.hands
 
 # For static images:
 def drawHands(azureCap):
+    #turn raw buffer from KinectTest into cv::Mat
     img_np = np.frombuffer(azureCap, dtype=np.uint8)
     img = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
-    with mp_hands.Hands(
-        static_image_mode=True,
-        max_num_hands=2,
-        min_detection_confidence=0.5) as hands:
-        # Read an image, flip it around y-axis for correct handedness output (see
-        # above).
+
+    with mp_hands.Hands(static_image_mode=True, max_num_hands=2, 
+                        min_detection_confidence=0.5) as hands:
+        
+        # Read image, flip it around y-axis for correct handedness output 
         image = cv2.flip(img, 1)
+        
         # Convert the BGR image to RGB before processing.
         results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         image_height, image_width, _ = image.shape

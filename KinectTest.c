@@ -5,20 +5,17 @@
 #include <Python.h>
 #include <opencv2/opencv.hpp>
 
-int main()
-{
+int main() {
     k4a_capture_t capture;
-    uint32_t count = k4a_device_get_installed_count();
-    if (count == 0)
-    {
+    uint2_t count = k4a_device_get_installed_count();
+    if (count == 0) {
         printf("No k4a devices attached!\n");
         return 1;
     }
 
     // Open the first plugged in Kinect device
     k4a_device_t device = NULL;
-    if (K4A_FAILED(k4a_device_open(K4A_DEVICE_DEFAULT, &device)))
-    {
+    if (K4A_FAILED(k4a_device_open(K4A_DEVICE_DEFAULT, &device))) {
         printf("Failed to open k4a device!\n");
         return 1;
     }
@@ -43,61 +40,58 @@ int main()
 
     
     // Start the camera with the given configuration
-    if (K4A_FAILED(k4a_device_start_cameras(device, &config)))
-    {
+    if (K4A_FAILED(k4a_device_start_cameras(device, &config))) {
         printf("Failed to start cameras!\n");
         k4a_device_close(device);
         return 1;
     }
+    // Initialize the Python interpreter
+    Py_Initialize();
 
+    // Import the Python module
+    PyObject *HandTest = PyImport_ImportModule("HandTest");
 
-    k4a_image_t colorImage = k4a_capture_get_color_image(capture); // get image metadata
-    if (colorImage != NULL)
-    {
-        // you can check the format with this function
-        k4a_image_format_t format = k4a_image_get_format(colorImage); // K4A_IMAGE_FORMAT_COLOR_BGRA32 
+    // Get a reference to the Python function
+    PyObject *drawHands = PyObject_GetAttrString(HandTest, "drawHands");
 
-        // get raw buffer
-        uint8_t* buffer = k4a_image_get_buffer(colorImage);
+    bool lookingForHands = true;
+    while(lookingForHands) {
+        if (k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE) == K4A_WAIT_RESULT_SUCCEEDED) {
+            // get image metadata
+            k4a_image_t colorImage = k4a_capture_get_color_image(capture); 
 
-        // convert the raw buffer to cv::Mat
-        int rows = k4a_image_get_height_pixels(colorImage);
-        int cols = k4a_image_get_width_pixels(colorImage);
-        cv::Mat colorMat(rows , cols, CV_8UC4, (void*)buffer, cv::Mat::AUTO_STEP);
+            if (colorImage != NULL) {
+                // get raw buffer
+                uint8_t* buffer = k4a_image_get_buffer(colorImage);
 
-        // Initialize the Python interpreter
-        Py_Initialize();
+                // convert the raw buffer to cv::Mat
+                int rows = k4a_image_get_height_pixels(colorImage);
+                int cols = k4a_image_get_width_pixels(colorImage);
+                cv::Mat colorMat(rows , cols, CV_8UC4, (void*)buffer, cv::Mat::AUTO_STEP);
 
-        // Import the Python module
-        PyObject *pModule = PyImport_ImportModule("HandTest");
+                // Serialize the OpenCV Mat
+                std::vector<uchar> buf;
+                cv::imencode(".jpg", colorMat, buf);
+                Py_buffer pybuf = {buf.data(), buf.size()};
 
-        // Get a reference to the Python function
-        PyObject *pFunction = PyObject_GetAttrString(pModule, "drawHands");
+                // Prepare cv::Mat to send to drawHands()
+                PyObject *curFrame = PyTuple_Pack(1, PyBytes_FromStringAndSize((char*)pybuf.buf, pybuf.len));
 
+                // Call drawHands()
+                PyObject_CallObject(drawHands, curFrame);
 
-        // Serialize the OpenCV Mat
-        std::vector<uchar> buf;
-        cv::imencode(".jpg", colorMat, buf);
-        Py_buffer pybuf = {buf.data(), buf.size()};
-
-        // Prepare arguments for the Python function
-        PyObject *pArgs = PyTuple_Pack(1, PyBytes_FromStringAndSize((char*)pybuf.buf, pybuf.len));
-
-        // Call the Python function
-        PyObject_CallObject(pFunction, pArgs);
-
-        // Clean up
-        Py_DECREF(pArgs);
-        Py_DECREF(pFunction);
-        Py_DECREF(pModule);
-
-        // Shutdown the Python interpreter
-        Py_Finalize();
-
-        k4a_image_release(colorImage);
+                // Clean up python object
+                Py_DECREF(curFrame);
+                k4a_image_release(colorImage);
+            }
+        }
     }
+    //clean up python module and method
+    Py_DECREF(drawHands);
+    Py_DECREF(HandTest);
 
-    // Camera capture and application specific code would go here
+    // Shutdown the Python interpreter
+    Py_Finalize();
 
 
     // Shut down the camera when finished with application logic
