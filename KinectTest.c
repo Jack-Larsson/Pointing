@@ -55,8 +55,8 @@ int main() {
     PyObject *drawHands = PyObject_GetAttrString(HandTest, "drawHands");
 
     //make a 2d array to hold coordinates from python call
-    double **pointerFinger = (double **)malloc(4 * sizeof(double *));
-    for (int i = 0; i < 4; i++) {
+    double **pointerFinger = (double **)malloc(2 * sizeof(double *));
+    for (int i = 0; i < 2; i++) {
         pointerFinger[i] = (double *)malloc(3 * sizeof(double));
     }
 
@@ -117,9 +117,8 @@ int main() {
     Py_Finalize();
 
     //free pointerFinger
-    for (int i = 0; i < rows; i++) {
-        free(pointerFinger[i]);
-    }
+    free(pointerFinger[0]);
+    free(pointerFinger[1]);
     free(pointerFinger);
 
     // Shut down the camera when finished with application logic
