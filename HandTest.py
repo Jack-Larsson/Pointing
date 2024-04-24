@@ -39,7 +39,7 @@ def drawHands(azureCap):
                 # Collect index finger landmarks
                 if (joint == mp_hands.HandLandmark.INDEX_FINGER_TIP) or (joint == mp_hands.HandLandmark.INDEX_FINGER_MCP):
                     index_finger_joints.append((int(hand_landmarks.landmark[joint].x), 
-                    int(hand_landmarks.landmark[joint].y), int(hand_landmarks.landmark[joint].z)))
+                    int(hand_landmarks.landmark[joint].y)))
             mp_drawing.draw_landmarks(
                 annotated_image,
                 hand_landmarks,
