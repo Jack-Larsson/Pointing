@@ -3,12 +3,13 @@ import torch
 import matplotlib.pyplot as plt
 import cv2
 import sys
+from point import *
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 
 sys.path.append("..")
 
 #path to checkpoint
-sam_checkpoint = "sam_vit_h_4b8939.pth" #might need to be changed after installing on lab machine
+sam_checkpoint = "/home/bwilab/Downloads/sam_vit_h_4b8939.pth" #might need to be changed after installing on lab machine
 model_type = "vit_h"
 
 device = "cuda"
@@ -17,6 +18,9 @@ sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam.to(device=device)
 
 mask_generator = SamAutomaticMaskGenerator(sam)
+
+# image = cv2.imread('test.jpg')
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 #from the tutorial I don't think we really need this
 def show_anns(anns):
@@ -44,22 +48,26 @@ def segmentFrame(image):
     print(len(masks))
     print(masks[0].keys())
     plt.figure(figsize=(20,20))
-    plt.imshow(image)
-    show_anns(masks)
+    #plt.imshow(image)
+    #show_anns(masks)
     plt.axis('off')
     plt.show() 
+
+#segmentFrame(image)
 
 #basically what we want to do after we have the masks
 #just an idea, we might not want to return and might just want to display it here
 
-# def pickObject(masks, pointingVector):
-#     #go through all the masks
-#     for seg in masks:
-#         closestDistance = infinity
-#         #if the vector intersects this mask, check how far we are from the coordinates that define the segment
-#         if pointingVector intersects seg['bbox']:
-#             calculate distance from seg['point_coords'] to pointingVector
-#             if thisDistance < closestDistance :
-#                 targetObject = seg
-#     #return the object that we the vector is closest to
-#     return targetObject
+def pickObject(image):
+    #go through all the masks
+    masks = mask_generator.generate(image)
+    closestDistance = float('inf')
+    size = image.shape[0] * image.shape[1]
+    for seg in masks:
+        #if the vector intersects this mask, check how far we are from the coordinates that define the segment
+        if (seg['area'] / size) < 0.25 :
+            if bounding_box_intersects(seg['bbox']):
+                if point_line_distance(seg['point_coords']) < closestDistance :
+                    targetObject = seg
+    #return the object that we the vector is closest to
+    return targetObject
