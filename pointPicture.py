@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 
 
-def point_line_distance(point, line_start, line_end):
+def pointLineDistance(point, line_start, line_end):
     px, py = point
     x1, y1 = line_start
     x2, y2 = line_end
@@ -46,8 +46,8 @@ if result.multi_hand_landmarks:
         
         # if the middle joints in finger aren't close enough to the line don't draw the extended ray
         distance_threshold = 14  
-        pip_distance = point_line_distance((pip_x, pip_y), (base_x, base_y), (tip_x, tip_y))
-        dip_distance = point_line_distance((dip_x, dip_y), (base_x, base_y), (tip_x, tip_y))
+        pip_distance = pointLineDistance((pip_x, pip_y), (base_x, base_y), (tip_x, tip_y))
+        dip_distance = pointLineDistance((dip_x, dip_y), (base_x, base_y), (tip_x, tip_y))
 
         if pip_distance < distance_threshold and dip_distance < distance_threshold:
             # draw the ray
@@ -67,7 +67,7 @@ cv2.imshow("hand", image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-def bounding_box_intersect(bounding_box) -> bool:
+def boundingBoxIntersect(bounding_box) -> bool:
     lsX = base_x
     lsY = base_y
     leX = extended_tip_x
