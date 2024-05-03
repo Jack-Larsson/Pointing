@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 import cv2
 import sys
-from point import *
+from pointPicture import *
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 
 sys.path.append("..")
@@ -40,34 +40,40 @@ def show_anns(anns):
         ax.imshow(np.dstack((img, m*0.35)))
 
 #image needs to be RGB, which MediaPipe also uses so shouldn't be an issue
-def segmentFrame(image):
-    #create mask
-    masks = mask_generator.generate(image)
-    
-    #not entirely sure what this does until we run it
-    print(len(masks))
-    print(masks[0].keys())
-    plt.figure(figsize=(20,20))
-    #plt.imshow(image)
-    #show_anns(masks)
-    plt.axis('off')
-    plt.show() 
-
-#segmentFrame(image)
 
 #basically what we want to do after we have the masks
 #just an idea, we might not want to return and might just want to display it here
 
-def pickObject(image):
+def pickObject(RGBimage):
     #go through all the masks
-    masks = mask_generator.generate(image)
+    masks = mask_generator.generate(RGBimage)
+    print(len(masks))
+    print(masks[0].keys())
     closestDistance = float('inf')
-    size = image.shape[0] * image.shape[1]
+    size = RGBimage.shape[0] * RGBimage.shape[1]
     for seg in masks:
         #if the vector intersects this mask, check how far we are from the coordinates that define the segment
         if (seg['area'] / size) < 0.25 :
-            if bounding_box_intersects(seg['bbox']):
-                if point_line_distance(seg['point_coords']) < closestDistance :
-                    targetObject = seg
+            if boundingBoxIntersect(seg['bbox']):
+                if pointLineDistance(seg['point_coords'][0]) < closestDistance :
+                    print("we found the best one at", seg['point_coords'])
     #return the object that we the vector is closest to
-    return targetObject
+    print("done with loop")
+    plt.figure(figsize=(20,20))
+    plt.imshow(RGBimage)
+    show_anns(masks)
+    plt.axis('off')
+    plt.show()
+    print("completed")
+
+#   ax = plt.gca()
+#     ax.set_autoscale_on(False)
+#     polygons = []
+#     color = []
+#     print(targetObject['point_coords'])
+#     m = targetObject['segmentation']
+#     img = np.ones((m.shape[0], m.shape[1], 3))
+#     color_mask = np.random.random((1, 3)).tolist()[0]
+#     for i in range(3):
+#         img[:,:,i] = color_mask[i]
+#     ax.imshow(np.dstack((img, m*0.35)))
