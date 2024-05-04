@@ -19,27 +19,33 @@ def drawHands(RGB, image):
             index_pip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_PIP]
             index_dip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_DIP]
 
-            tip_x, tip_y = int(index_tip.x * image.shape[1]), int(index_tip.y * image.shape[0])
+            pv.tip_x = int(index_tip.x * image.shape[1]) 
+            pv.tip_y = int(index_tip.y * image.shape[0])
             #start of pointing vector
             pv.base_x = int(index_base.x * image.shape[1]) 
             pv.base_y = int(index_base.y * image.shape[0])
 
-            pip_x, pip_y = int(index_pip.x * image.shape[1]), int(index_pip.y * image.shape[0])
-            dip_x, dip_y = int(index_dip.x * image.shape[1]), int(index_dip.y * image.shape[0])
+            # pip_x, pip_y = int(index_pip.x * image.shape[1]), int(index_pip.y * image.shape[0])
+            # dip_x, dip_y = int(index_dip.x * image.shape[1]), int(index_dip.y * image.shape[0])
             
-        # if the middle joints in finger aren't close enough to the line don't draw the extended ray
-        distance_threshold = 20  
-        pip_distance = pv.point_line_distance((pip_x, pip_y), (pv.base_x, pv.base_y), (tip_x, tip_y))
-        dip_distance = pv.point_line_distance((dip_x, dip_y), (pv.base_x, pv.base_y), (tip_x, tip_y))
+        # # if the middle joints in finger aren't close enough to the line don't draw the extended ray
+        # distance_threshold = 20  
+        # pip_distance = pv.point_line_distance((pip_x, pip_y))
+        # dip_distance = pv.point_line_distance((dip_x, dip_y))
 
-        if pip_distance < distance_threshold and dip_distance < distance_threshold:
-        # draw the ray
-            direction = np.array([tip_x - pv.base_x, tip_y - pv.base_y])
-            norm_direction = direction / np.linalg.norm(direction)
+        # if pip_distance < distance_threshold and dip_distance < distance_threshold:
+
+        #make ray
+        direction = np.array([pv.tip_x - pv.base_x, pv.tip_y - pv.base_y])
+        norm_direction = direction / np.linalg.norm(direction)
 
         # line end
-        extended_tip_x = int(tip_x + norm_direction[0] * 1000)  
-        extended_tip_y = int(tip_y + norm_direction[1] * 1000)
+        pv.extended_tip_x = int(pv.tip_x + norm_direction[0] * 1000)  
+        pv.extended_tip_y = int(pv.tip_y + norm_direction[1] * 1000)
 
+        #testing
+        cv2.line(image, (pv.tip_x, pv.tip_y), (pv.extended_tip_x, pv.extended_tip_y), (255, 0, 0), 4)
+
+        #draw hands on image
         mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
             

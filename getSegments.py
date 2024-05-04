@@ -24,16 +24,32 @@ mask_generator = SamAutomaticMaskGenerator(sam)
 def pickObject(RGBimage):
     #go through all the masks
     masks = mask_generator.generate(RGBimage)
-    print(len(masks))
-    print(masks[0].keys())
+
     closestDistance = float('inf')
     size = RGBimage.shape[0] * RGBimage.shape[1]
+    targetObjectMask = masks[0]['segmentation']
+
     for seg in masks:
         #if the vector intersects this mask, check how far we are from the coordinates that define the segment
         if (seg['area'] / size) < 0.25 :
             if pv.boundingBoxIntersect(seg['bbox']):
-                if pv.pointLineDistance(seg['point_coords'][0]) < closestDistance :
+                print('intersecting')
+                distance = pv.pointLineDistance(bboxCenter(seg['bbox']))
+                if distance < closestDistance:
                     print("we found the best one at", seg['point_coords'])
                     targetObjectMask = seg['segmentation']
+                    closestDistance = distance
     #return the object that we the vector is closest to
     return targetObjectMask
+
+#get coordinates for center of a bounding box
+def bboxCenter(bbox):
+    x1 = bbox[0]
+    y1 = bbox[1]
+    x2 = bbox[0] + bbox[2]
+    y2 = bbox[1] + bbox[3]
+
+    centerX = (x1 + x2) / 2
+    centerY = (y1 + y2) / 2
+
+    return(centerX, centerY)
