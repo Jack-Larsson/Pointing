@@ -57,14 +57,9 @@ def pickObject(RGBimage):
             if boundingBoxIntersect(seg['bbox']):
                 if pointLineDistance(seg['point_coords'][0]) < closestDistance :
                     print("we found the best one at", seg['point_coords'])
+                    targetObjectMask = seg['segmentation']
     #return the object that we the vector is closest to
-    print("done with loop")
-    plt.figure(figsize=(20,20))
-    plt.imshow(RGBimage)
-    show_anns(masks)
-    plt.axis('off')
-    plt.show()
-    print("completed")
+    return targetObjectMask
 
 #   ax = plt.gca()
 #     ax.set_autoscale_on(False)

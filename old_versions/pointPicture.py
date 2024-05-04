@@ -69,7 +69,7 @@ def drawHands(RGB, image):
         #cv2.line(image, (tip_x, tip_y), (extended_tip_x, extended_tip_y), (255, 0, 0), 4)
     
         
-        #mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+        mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
             
     #cv2.imshow("hand", image)
 
