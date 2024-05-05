@@ -51,8 +51,8 @@ def drawHands(RGB, image):
         norm_direction = direction / np.linalg.norm(direction)
 
         #extend the pointing vector span entire frame
-        pv.extended_tip_x = int(pv.tip_x + norm_direction[0] * 1000)  
-        pv.extended_tip_y = int(pv.tip_y + norm_direction[1] * 1000)
+        pv.extended_tip_x = int(pv.tip_x + norm_direction[0] * max(RGB.shape[0],RGB.shape[1]))  
+        pv.extended_tip_y = int(pv.tip_y + norm_direction[1] * max(RGB.shape[0],RGB.shape[1]))
 
         #draw pointing vector
         cv2.line(image, (pv.tip_x, pv.tip_y), (pv.extended_tip_x, pv.extended_tip_y), (255, 0, 0), 4)
