@@ -7,7 +7,8 @@ extended_tip_y = 0
 tip_x = 0
 tip_y = 0
 
-#find distance from a point to a line
+#pre: drawHands() has been called
+#find distance from a point to the pointing vector
 #used to help determine which segment we are pointing at
 def pointLineDistance(point):
     global base_x
@@ -20,11 +21,11 @@ def pointLineDistance(point):
     x2 = extended_tip_x
     y2 = extended_tip_y
 
-    #if the point is behind the pointing hand, it is certainly not he object being pointed at
+    #if the point is behind the pointing hand, it is certainly not the object being pointed at
     if (tip_x < x2 and px < (tip_x * 1.1)) or (tip_x > x2 and px > (tip_x * 0.9)):
         return float('inf')
 
-    #distance between line and point formula
+    #distance between a line and a point formula
     num = abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1)
     den = np.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
@@ -37,16 +38,17 @@ def boundingBoxIntersect(bounding_box) -> bool:
     global tip_y 
     global extended_tip_x
     global extended_tip_y
-    #calculate slope of vector in the frame
+
+    #calculate slope of the vector in the frame
     slope = (extended_tip_y - tip_y) / (extended_tip_x - tip_x)
     
-    #get corners of boinding box
+    #get corners of bounding box
     topLeftX = bounding_box[0]
     topLeftY = bounding_box[1]
     botRightX = bounding_box[0] + bounding_box[2]
     botRightY = bounding_box[1] + bounding_box[3]
 
-    #get y coordiante of pointing vector at the left and right ends of the bounding box
+    #get y coordinate of pointing vector at the left and right ends of the bounding box
     leftLineY = (slope * (topLeftX - tip_x)) + tip_y
     rightLineY = (slope * (botRightX - tip_x)) + tip_y
 

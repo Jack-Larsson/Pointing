@@ -7,20 +7,16 @@ import pointingVector as pv
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 
 sys.path.append("..")
-
-#path to checkpoint
-sam_checkpoint = "sam_vit_h_4b8939.pth" #might want to just move into directory but it works
+#set up segment-anything
+sam_checkpoint = "sam_vit_h_4b8939.pth" 
 model_type = "vit_h"
-
-#lab machine does not have cuda installed, takes forever to run but scared of messing something up
-#ask Dr. Hart before running tests
 device = "cuda"
-
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam.to(device=device)
-
+#slightly modified for efficiency
 mask_generator = SamAutomaticMaskGenerator(sam, points_per_side = 16, points_per_batch=32, pred_iou_thresh = 0.92)
 
+#pre: drawHands() has been called
 #From the image generate a list of all segments. Then search through these segments 
 #for the one most likely to be the object being pointing at
 #return the mask of the chosen segment
@@ -31,7 +27,7 @@ def pickObject(RGBimage):
     bestScore = 0
     targetObjectMask = masks[0]['segmentation']
 
-    #search through list for the targetObject
+    #search through list of segments for the targetObject
     for seg in masks:
         #eliminate objects that are too large to remove background objects such as walls, tables, etc
         if (seg['bbox'][2] / RGBimage.shape[0]) < 0.4 and seg['bbox'][3] / RGBimage.shape[1] < 0.4:
@@ -62,21 +58,22 @@ def bboxCenter(bbox):
     return(centerX, centerY)
 
 
-#get a 'score' for a segment, which is a weighted average of it's
-#distance from the pointing vector, distance from the pointing hand, and size
+#get a 'score' for a segment, on a scale from 0 - 1 with a 1 being the best
+#takes accuracy and and proximity to pointing hand into account
 def segScore(bbox, width, height):
+    #get bounding box coordinates
     segCoords = bboxCenter(bbox)
     distFromLine = abs(pv.pointLineDistance(segCoords))
+    #if segment is behind the pointing hand, set distFromLine to height which will make the accuracyScore = 0
     if distFromLine == float('inf'):
         distFromLine = height
     distFromHand = abs(pv.pointToPointDistance(segCoords, (pv.tip_x, pv.tip_y)))
-    #favor small items
-    #sizeScore = (1 - ((bbox[2] * bbox[3]) / (width * height))) * 0.02
-    #favor close items
+
+    #slightly favor close items
     proximityScore = (1 - (distFromHand / (width - pv.base_x))) * 0.01
     #favor accuracy most
     accuracyScore = (1 - (distFromLine / height)) * 0.99
-    #weighted average determined by testing
+    #perfect score would add to 1
     return proximityScore + accuracyScore
 
     
